@@ -1,2 +1,9 @@
-.vscode /
-build/
+# Compiled objects
+*.o
+*.ko
+*.obj
+
+# IDE and editor files
+/.vscode/
+/.dist/
+
