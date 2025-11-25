@@ -1,9 +1,30 @@
-# Compiled objects
+# Build artifacts
+build/
+*.bin
+*.hex
+*.elf
+*.map
+
+# Object files
 *.o
 *.ko
 *.obj
+*.lst
+*.d
 
 # IDE and editor files
-/.vscode/
-/.dist/
+.vscode/
+.idea/
+*.swp
+*.swo
 
+# OS files
+.DS_Store
+Thumbs.db
+
+# Dependency files
+*.d
+
+# Temporary files
+*.tmp
+*.temp

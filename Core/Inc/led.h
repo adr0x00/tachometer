@@ -4,9 +4,7 @@
 #define LED_PIN        GPIO_PIN_13
 #define LED_PORT       GPIOC
 
-#define BUTTON_PIN     GPIO_PIN_10
-#define BUTTON_PORT    GPIOC
+#include "main.h"
 
-#include "stm32f1xx_hal.h"
-void gpio_init(void); 
+void led_gpio_init(void); 
 #endif// GPIO_H

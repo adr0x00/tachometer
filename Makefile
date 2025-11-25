@@ -53,7 +53,8 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
-Core/Src/gpio.c
+Core/Src/led.c \
+Core/Src/button.c
 
 # ASM sources
 ASM_SOURCES =  \
