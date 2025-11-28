@@ -9,6 +9,7 @@ void button_gpio_init(void){
     GPIO_InitStruct.Pull    = GPIO_PULLUP; 
     GPIO_InitStruct.Speed   = GPIO_SPEED_FREQ_LOW; 
     HAL_GPIO_Init(BUTTON_PORT, &GPIO_InitStruct);
-    
-    HAL_NVIC_EnableIRQ(EXTI9_5_IRQn); // Enable interrupt
+ 
+    HAL_NVIC_EnableIRQ(BUTTON_EXTI); // Enable interrupt
 }
+

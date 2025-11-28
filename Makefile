@@ -50,11 +50,17 @@ Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_pwr.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_flash_ex.c \
 Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_exti.c \
+Drivers/STM32F1xx_HAL_Driver/Src/stm32f1xx_hal_i2c.c \
 Core/Src/system_stm32f1xx.c \
 Core/Src/sysmem.c \
 Core/Src/syscalls.c \
 Core/Src/led.c \
-Core/Src/button.c
+Core/Src/button.c \
+Core/Src/ir_sensor.c \
+Core/Src/timer.c \
+Core/Src/i2c.c \
+Drivers/oled/ssd1306_fonts.c \
+Drivers/oled/ssd1306.c \
 
 # ASM sources
 ASM_SOURCES =  \
@@ -121,7 +127,9 @@ C_INCLUDES =  \
 -IDrivers/STM32F1xx_HAL_Driver/Inc/Legacy \
 -IDrivers/STM32F1xx_HAL_Driver/Inc \
 -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
--IDrivers/CMSIS/Include
+-IDrivers/CMSIS/Include	\
+-IDrivers/oled \
+
 
 
 # compile gcc flags
