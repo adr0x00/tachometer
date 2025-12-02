@@ -2,6 +2,11 @@
 
 /* gloal counter var for ir sensor */
 unsigned long ir_count = 0; 
+unsigned long last_debounce_time = 0;
+
+/* gloal ir detected flag */
+bool ir_detect_flag  = IR_RESET; 
+bool last_detect = false; // 0
 
 
 void ir_gpio_init(void)
@@ -15,3 +20,5 @@ void ir_gpio_init(void)
 
     HAL_NVIC_EnableIRQ(IR_EXTI); // Enable interrupt
 }
+
+

@@ -13,3 +13,6 @@ void button_gpio_init(void){
     HAL_NVIC_EnableIRQ(BUTTON_EXTI); // Enable interrupt
 }
 
+void button_read(void){
+    return HAL_GPIO_ReadPin(BUTTON_PORT, BUTTON_PIN);
+}

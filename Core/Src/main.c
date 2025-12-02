@@ -25,20 +25,29 @@
 #include "i2c.h"
 #include "ssd1306.h"
 #include "ssd1306_fonts.h"
+#include "app.h"
+
+/* FreeRTOS includes. */
+#include <FreeRTOS.h>
+#include <task.h>
+#include <queue.h>
+#include <timers.h>
+#include <semphr.h>
+/*
+    Проблемы 
+    FreeRTOS использует systick 
+    а микроконтроллеру нужно тактироваться от другого мк 
+*/ 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
-#define RESET   0
-#define SET     1
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -49,18 +58,19 @@
 /* Private variables ---------------------------------------------------------*/
 
 /* USER CODE BEGIN PV */
-int flag  = RESET; 
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 /* USER CODE BEGIN PFP */
-
+void display_digital_with_bar(int rpm);
+void display_compact_rpm(int rpm);
+void display_minimal_rpm(int rpm);
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-char buf[50] = "Hello";
+
 /* USER CODE END 0 */
 
 /**
@@ -71,7 +81,6 @@ int main(void)
 {
 
   /* USER CODE BEGIN 1 */
-
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -98,38 +107,9 @@ int main(void)
   i2c_init();
   /* USER CODE END 2 */ 
   ssd1306_Init();
-  ssd1306_Fill(White);
-  ssd1306_UpdateScreen();
-
-  ssd1306_SetCursor(0, 0);
-  ssd1306_WriteString("OLED OK!", Font_11x18, Black);
-
-  ssd1306_UpdateScreen();
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
-  while (1)
-  {
-    /* USER CODE END WHILE */
-    if (flag) {
-        flag = RESET; 
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
-        HAL_Delay(50);
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
-        HAL_Delay(50);
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
-        HAL_Delay(50);
-        HAL_GPIO_TogglePin(LED_PORT, LED_PIN);
-        HAL_Delay(100);
-    }
-    itoa((int)ir_count, buf, 10); 
-    ssd1306_Fill(White);
-    ssd1306_UpdateScreen();
-    ssd1306_SetCursor(0, 0);
-    ssd1306_WriteString(buf, Font_11x18, Black);
-    ssd1306_UpdateScreen();
-
-    /* USER CODE BEGIN 3 */
-  }
+  app_run();
   /* USER CODE END 3 */
 }
 
@@ -172,10 +152,137 @@ void SystemClock_Config(void)
 /* USER CODE BEGIN 4 */
 void HAL_GPIO_EXTI_Callback(uint16_t GPIO_Pin)
 {
- // HAL_GPIO_TogglePin(LED_PORT, LED_PIN); 
-  flag = SET; 
-  ir_count++; 
+  // не забудь поставить условие выбора пина , что бы кнопка не поднимала флаг 
+  ir_detect_flag = IR_SET; 
 }
+
+void display_digital_with_bar(int rpm)
+{
+    char tmp_buffer[8];
+    int max_rpm = 8000;
+    
+    ssd1306_Fill(White);
+    
+    // Большие цифры RPM
+    ssd1306_SetCursor(20, 0);
+    itoa(rpm, tmp_buffer, 10);
+    ssd1306_WriteString(tmp_buffer, Font_16x26, Black);
+    
+    // Подпись под цифрами
+    ssd1306_SetCursor(55, 30);
+    ssd1306_WriteString("RPM", Font_7x10, Black);
+    
+    // Прогресс-бар
+    ssd1306_DrawRectangle(10, 45, 118, 55, Black);
+    
+    // Заполнение прогресс-бара
+    int bar_width = (rpm * 108) / max_rpm;
+    if (bar_width > 108) bar_width = 108;
+    if (bar_width < 0) bar_width = 0;
+    
+    ssd1306_FillRectangle(11, 46, 11 + bar_width, 54, Black);
+    
+    // Деления на прогресс-баре
+    for (int i = 0; i <= 4; i++) {
+        int x_pos = 10 + i * 27;
+        ssd1306_Line(x_pos, 55, x_pos, 60, Black);
+        
+        // Подписи делений
+        ssd1306_SetCursor(x_pos - 5, 62);
+        char mark[4];
+        itoa(i * (max_rpm/4), mark, 10);
+        ssd1306_WriteString(mark, Font_6x8, Black);
+    }
+    
+    ssd1306_UpdateScreen();
+}
+
+void display_compact_rpm(int rpm)
+{
+    char tmp_buffer[8];
+    int max_rpm = 8000;
+    
+    ssd1306_Fill(White);
+    
+    // Рисуем круговой индикатор
+    int radius = 20;
+    int center_x = 20;
+    int center_y = 32;
+    
+    // Внешний круг
+    ssd1306_DrawCircle(center_x, center_y, radius, Black);
+    
+    // Заливка в зависимости от RPM (имитация цвета)
+    int fill_angle = (rpm * 360) / max_rpm;
+    if (fill_angle > 360) fill_angle = 360;
+    
+    // Рисуем заполненную часть
+    for (int r = 1; r < radius; r++) {
+        // Это упрощенная версия - для реального использования лучше использовать DrawArc
+        // Здесь рисуем линии от центра к краю
+        for (int angle = 0; angle < fill_angle; angle += 5) {
+            float rad = angle * 3.14159 / 180;
+            int x = center_x + r * cos(rad);
+            int y = center_y - r * sin(rad);
+            ssd1306_DrawPixel(x, y, Black);
+        }
+    }
+    
+    // Большие цифры
+    ssd1306_SetCursor(50, 10);
+    itoa(rpm, tmp_buffer, 10);
+    ssd1306_WriteString(tmp_buffer, Font_16x26, Black);
+    
+    // Статусная строка
+    ssd1306_SetCursor(50, 40);
+    ssd1306_WriteString("RPM", Font_11x18, Black);
+    
+    // Индикатор зоны (текстовый)
+    ssd1306_SetCursor(50, 55);
+    if (rpm < max_rpm * 0.6) {
+        ssd1306_WriteString("NORMAL", Font_6x8, Black);
+    } else if (rpm < max_rpm * 0.8) {
+        ssd1306_WriteString("WARNING", Font_6x8, Black);
+    } else {
+        ssd1306_WriteString("DANGER!", Font_6x8, Black);
+    }
+    
+    ssd1306_UpdateScreen();
+}
+
+void display_minimal_rpm(int rpm)
+{
+    char tmp_buffer[8];
+    
+    ssd1306_Fill(Black); // Инвертируем цвета для стиля
+    
+    // Очень большие цифры
+    ssd1306_SetCursor(10, 5);
+    itoa(rpm, tmp_buffer, 10);
+    
+    // Центрируем цифры
+    int len = strlen(tmp_buffer);
+    int x_pos = (128 - len * 16) / 2; // Для Font_16x26 примерно
+    ssd1306_SetCursor(x_pos > 0 ? x_pos : 0, 5);
+    
+    ssd1306_WriteString(tmp_buffer, Font_16x26, White);
+    
+    // Тонкая линия под цифрами
+    ssd1306_Line(20, 40, 108, 40, White);
+    
+    // Текст внизу
+    ssd1306_SetCursor(52, 45);
+    ssd1306_WriteString("RPM", Font_11x18, White);
+    
+    // Небольшая дополнительная информация
+    ssd1306_SetCursor(0, 58);
+    char info[16];
+    sprintf(info, "~%d%%", (rpm * 100) / 8000);
+    ssd1306_WriteString(info, Font_6x8, White);
+    
+    ssd1306_UpdateScreen();
+}
+
 /* USER CODE END 4 */
 
 /**
@@ -221,4 +328,5 @@ void assert_failed(uint8_t *file, uint32_t line)
   Frequency Measurement - измеряем кол-во импульсов за 1 с и * 60 с для получения в минуту. 
   Period Measurement    - измеряем период между импульсами
   
+  super loop = ОПРАШИВАЕМ ДАТЧИКИ -> РАССЧИТЫВАЕМ ОБОРОТЫ -> ОТОБРАЖАЕМ ПОЛЬЗОВАТЕЛЮ
 */ 

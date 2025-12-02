@@ -32,6 +32,9 @@ extern "C" {
 /* USER CODE BEGIN Includes */
 #include <stdbool.h>
 #include <stdlib.h>
+#include <string.h>
+#include <math.h>
+#include <stdio.h>
 /* USER CODE END Includes */
 
 /* Exported types ------------------------------------------------------------*/

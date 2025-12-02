@@ -61,6 +61,12 @@ Core/Src/timer.c \
 Core/Src/i2c.c \
 Drivers/oled/ssd1306_fonts.c \
 Drivers/oled/ssd1306.c \
+FreeRTOS/tasks.c \
+FreeRTOS/queue.c	\
+FreeRTOS/list.c	\
+FreeRTOS/portable/GCC/ARM_CM3/port.c \
+FreeRTOS/portable/MemMang/heap_2.c \
+Core/Src/app.c
 
 # ASM sources
 ASM_SOURCES =  \
@@ -129,8 +135,8 @@ C_INCLUDES =  \
 -IDrivers/CMSIS/Device/ST/STM32F1xx/Include \
 -IDrivers/CMSIS/Include	\
 -IDrivers/oled \
-
-
+-IFreeRTOS/include \
+-IFreeRTOS/portable/GCC/ARM_CM3
 
 # compile gcc flags
 ASFLAGS = $(MCU) $(AS_DEFS) $(AS_INCLUDES) $(OPT) -Wall -fdata-sections -ffunction-sections
